@@ -68,5 +68,5 @@ which will output something like
 ```
 
 Now calculate log(524410)/log(2) which equates to 19.000335671081253  
-Take its floor i.e. 19 and calculate the power of 2 to the number ie 2<sup>19</sup> which equates to 524288
+Take its floor i.e. 19 and calculate the power of 2 to the number ie 2<sup>19</sup> which equates to 524288  
 The resulting number is the number of blocks to put in `dd count=` if you are manually making the save.
