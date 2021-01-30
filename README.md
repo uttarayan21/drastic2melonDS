@@ -1,6 +1,6 @@
 ## Drastic to MelonDS
 
-This script will convert the dsv save from drastic emulator to a melonDS save file
+This script will convert the dsv save from drastic emulator to a melonDS save file.  
 This also works for desmume to MelonDS save files since desmume also seems to add padding to the end of the file.
 
 ### Usage
