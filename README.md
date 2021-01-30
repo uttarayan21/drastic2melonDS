@@ -1,6 +1,7 @@
 ## Drastic to MelonDS
 
 This script will convert the dsv save from drastic emulator to a melonDS save file
+This also works for desmume to MelonDS save files since desmume also seems to add padding to the end of the file.
 
 ### Usage
 
@@ -16,6 +17,16 @@ optional arguments:
                         Specify the output file
   -f, --force           Overwrite the output file if it exists
 ```
+
+### Install
+
+Add it to a folder in your $PATH
+
+```bash
+install -Dm755 dr2mds.py ~/.local/bin/dr2mds
+```
+
+_For windows users just run the script from the folder_
 
 ### How to use
 
@@ -33,7 +44,7 @@ You can also specify the output like
 ./dr2mds.py "Pokemon Black.dsv" -o "PKMN.sav"
 ```
 
-### How does this works ?
+### How does this work ?
 
 MelonDS determines the type of save using exact byte count in the save file
 

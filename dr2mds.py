@@ -9,6 +9,16 @@ import os
 sys.tracebacklimit = 0
 
 
+class SaveFileTooSmallError(Exception):
+    def __init__(self, size, message="Save file is smaller than 128KiB"):
+        self.size = size
+        self.message = message
+        super().__init__(self.message)
+
+    def __str__(self):
+        return f"{self.size} is smaller than 131072 or 128KiB"
+
+
 def closest2pow(n):
     # int always returns the floor of the float
     # log(n)/log(2) gives log base 2 of n
@@ -18,6 +28,11 @@ def closest2pow(n):
 def drastic2melonds(infile, outfile):
     with open(infile, "rb") as inf, open(outfile, "wb") as ouf:
         in_bytes = os.stat(infile).st_size
+        if in_bytes < 131072:
+            print(f"The file {infile} seems to be smaller than 128KiB"
+                  " and not a valid save file", file=sys.stderr)
+            raise SaveFileTooSmallError(in_bytes)
+
         out_bytes = closest2pow(in_bytes)
         print(f"Reading {in_bytes} bytes from {infile}", file=sys.stderr)
         print(f"Writing {out_bytes} bytes to {outfile}", file=sys.stderr)
