@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Drastic to melonDS Save Converter</title>
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: system-ui, sans-serif;
+            background: #0f1117;
+            color: #e2e8f0;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .card {
+            background: #1a1d27;
+            border: 1px solid #2d3148;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 100%;
+            max-width: 520px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.01em;
+            color: #f1f5f9;
+        }
+
+        h1 span {
+            color: #818cf8;
+        }
+
+        p.subtitle {
+            font-size: 0.875rem;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+
+        /* Drop zone */
+        .drop-zone {
+            border: 2px dashed #3d4268;
+            border-radius: 8px;
+            padding: 2rem 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            position: relative;
+        }
+
+        .drop-zone:hover,
+        .drop-zone.dragover {
+            border-color: #818cf8;
+            background: #1e2140;
+        }
+
+        .drop-zone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+
+        .drop-zone .icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            line-height: 1;
+        }
+
+        .drop-zone .label {
+            font-size: 0.9rem;
+            color: #94a3b8;
+        }
+
+        .drop-zone .label strong {
+            color: #818cf8;
+        }
+
+        /* File info */
+        #file-info {
+            display: none;
+            background: #12141e;
+            border: 1px solid #2d3148;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-size: 0.82rem;
+            color: #94a3b8;
+            line-height: 1.8;
+        }
+
+        #file-info .name {
+            color: #e2e8f0;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        /* Log */
+        #log {
+            display: none;
+            background: #0a0b10;
+            border: 1px solid #2d3148;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            font-family: monospace;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+
+        #log .ok {
+            color: #86efac;
+        }
+
+        #log .err {
+            color: #fca5a5;
+        }
+
+        #log .inf {
+            color: #93c5fd;
+        }
+
+        /* Button */
+        button#convert-btn {
+            display: none;
+            background: #4f46e5;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 0.7rem 1.2rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s;
+            width: 100%;
+        }
+
+        button#convert-btn:hover:not(:disabled) {
+            background: #4338ca;
+        }
+
+        button#convert-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Download link */
+        #download-area {
+            display: none;
+            text-align: center;
+        }
+
+        #download-link {
+            display: inline-block;
+            background: #166534;
+            color: #bbf7d0;
+            border: 1px solid #16a34a;
+            border-radius: 8px;
+            padding: 0.65rem 1.4rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        #download-link:hover {
+            background: #15803d;
+        }
+
+        footer {
+            margin-top: 2rem;
+            font-size: 0.78rem;
+            color: #475569;
+            text-align: center;
+        }
+
+        footer a {
+            color: #6366f1;
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="card">
+        <div>
+            <h1>DraStic &rarr; <span>melonDS</span> Converter</h1>
+            <p class="subtitle" style="margin-top:0.4rem;">
+                Converts DraStic / DeSmuME <code>.dsv</code> saves to a melonDS-compatible
+                <code>.sav</code> by truncating the file to the nearest power-of-2 byte size.
+                Everything runs in your browser &mdash; no upload, no server.
+            </p>
+        </div>
+
+        <div class="drop-zone" id="drop-zone">
+            <input type="file" id="file-input" accept=".dsv,.sav,.bin" />
+            <div class="icon">&#128190;</div>
+            <div class="label"><strong>Choose a file</strong> or drag &amp; drop it here</div>
+            <div class="label" style="margin-top:0.25rem; font-size:0.78rem;">
+                Accepts <code>.dsv</code> or any raw save file
+            </div>
+        </div>
+
+        <div id="file-info"></div>
+
+        <button id="convert-btn" type="button">Convert &amp; Download</button>
+
+        <div id="log"></div>
+
+        <div id="download-area">
+            <a id="download-link" href="#" download="">&#8203;</a>
+        </div>
+    </div>
+
+    <footer>
+        Based on <a href="https://github.com/servius/drastic2melonDS" target="_blank" rel="noopener">dr2mds.py</a>
+        &mdash; runs entirely client-side
+    </footer>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const fileInfo = document.getElementById('file-info');
+        const convertBtn = document.getElementById('convert-btn');
+        const logEl = document.getElementById('log');
+        const dlArea = document.getElementById('download-area');
+        const dlLink = document.getElementById('download-link');
+
+        let selectedFile = null;
+        let objectURL = null;
+
+        // ── helpers ────────────────────────────────────────────────────────────────
+
+        function closest2pow(n) {
+            // Mirror of Python: 2 ** Math.floor(Math.log2(n))
+            return Math.pow(2, Math.floor(Math.log2(n)));
+        }
+
+        function formatBytes(n) {
+            if (n < 1024) return n + ' B';
+            if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KiB';
+            return (n / (1024 * 1024)).toFixed(2) + ' MiB';
+        }
+
+        function log(msg, cls) {
+            logEl.style.display = 'block';
+            const span = document.createElement('span');
+            if (cls) span.className = cls;
+            span.textContent = msg + '\n';
+            logEl.appendChild(span);
+        }
+
+        function clearLog() {
+            logEl.textContent = '';
+            logEl.style.display = 'none';
+        }
+
+        function outFilename(name) {
+            // Replace last extension with .sav
+            const dot = name.lastIndexOf('.');
+            return (dot !== -1 ? name.slice(0, dot) : name) + '.sav';
+        }
+
+        // ── file selection ─────────────────────────────────────────────────────────
+
+        function handleFile(file) {
+            if (!file) return;
+            selectedFile = file;
+
+            clearLog();
+            dlArea.style.display = 'none';
+            if (objectURL) {URL.revokeObjectURL(objectURL); objectURL = null;}
+
+            fileInfo.style.display = 'block';
+            fileInfo.innerHTML =
+                `<span class="name">${file.name}</span><br>` +
+                `Size: ${formatBytes(file.size)} (${file.size.toLocaleString()} bytes)`;
+
+            convertBtn.style.display = 'block';
+            convertBtn.disabled = false;
+        }
+
+        fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+        dropZone.addEventListener('dragover', e => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+        dropZone.addEventListener('drop', e => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        // ── conversion ─────────────────────────────────────────────────────────────
+
+        convertBtn.addEventListener('click', () => {
+            if (!selectedFile) return;
+
+            clearLog();
+            dlArea.style.display = 'none';
+            convertBtn.disabled = true;
+
+            const MIN_SIZE = 131072; // 128 KiB
+
+            if (selectedFile.size < MIN_SIZE) {
+                log(`ERROR: "${selectedFile.name}" is only ${formatBytes(selectedFile.size)}.`, 'err');
+                log('Save file must be at least 128 KiB. This does not look like a valid save.', 'err');
+                convertBtn.disabled = false;
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const buffer = e.target.result;
+                const inBytes = buffer.byteLength;
+                const outBytes = closest2pow(inBytes);
+
+                log(`Input : ${selectedFile.name}`, 'inf');
+                log(`Reading  ${formatBytes(inBytes)} (${inBytes.toLocaleString()} bytes)`, 'inf');
+                log(`Writing  ${formatBytes(outBytes)} (${outBytes.toLocaleString()} bytes)`, 'inf');
+
+                if (outBytes === inBytes) {
+                    log('File size is already a power of 2 — no trimming needed.', 'ok');
+                } else {
+                    const removed = inBytes - outBytes;
+                    log(`Removed ${formatBytes(removed)} of padding.`, 'ok');
+                }
+
+                const trimmed = buffer.slice(0, outBytes);
+                const blob = new Blob([trimmed], {type: 'application/octet-stream'});
+
+                if (objectURL) URL.revokeObjectURL(objectURL);
+                objectURL = URL.createObjectURL(blob);
+
+                const outName = outFilename(selectedFile.name);
+                dlLink.href = objectURL;
+                dlLink.download = outName;
+                dlLink.textContent = `Download  ${outName}  (${formatBytes(outBytes)})`;
+
+                dlArea.style.display = 'block';
+                convertBtn.disabled = false;
+
+                log('Done!', 'ok');
+            };
+
+            reader.onerror = function () {
+                log('ERROR: Could not read the file.', 'err');
+                convertBtn.disabled = false;
+            };
+
+            reader.readAsArrayBuffer(selectedFile);
+        });
+    </script>
+</body>
+
+</html>
